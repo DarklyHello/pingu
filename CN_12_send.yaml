@@ -41,4 +41,9 @@ SetEffect: 159
 Airplane: 170
 ItemThrow: 171
 AirplaneItemProb: 172
-Unk210: 209
+FxStockInit: 200
+UserInventory: 201
+UserItemList: 202
+StringTableInit: 205
+EnableShop: 209
+PackageMapInit: 212

@@ -42,9 +42,10 @@ Airplane: 171
 ItemThrow: 172
 AirplaneItemProb: 173
 FxStockInit: 200
+UserInventory: 201
 UserItemList: 202
 StringTableInit: 205
 DigiQAuthorizationResult: 209
+EnableShop: 210
 PackageMapInit: 213
-Unk210: 210
 CartList: 214

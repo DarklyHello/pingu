@@ -116,53 +116,48 @@ private object HandlerRouterUDP : SimpleChannelInboundHandler<DatagramPacket>() 
     }
 
     override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
+        val sender = packet.sender()
         val buf = packet.content()
 
-        val m_uLength = buf.readUnsignedByte().toInt() - crcLenUDP
+        val Len = buf.readUnsignedByte().toInt()
 
-        if (buf.readableBytes() < m_uLength) return
+        if (buf.readableBytes() < Len) return
 
-        val payload = buf.readSlice(m_uLength)
-        val opcode = payload.readUnsignedByte().toInt()
+        if (isJP)
+            buf.readInt()
 
-        // CRC
-        when {
-            isTW || isCN -> buf.readByte()
-            isJP -> buf.readInt()
-        }
+        val opcode = buf.readUnsignedByte().toInt()
 
         if (debugMode) {
             val hexOp = "0x${opcode.toString(16).uppercase()}"
             println("$opcode | $hexOp | UDP Recv")
-            println(ByteBufUtil.hexDump(payload).uppercase().chunked(2).joinToString(" "))
+            println(ByteBufUtil.hexDump(buf, buf.readerIndex(), buf.readableBytes() - crcLenUDP).uppercase().chunked(2).joinToString(" "))
         }
-
-        val sender = packet.sender()
 
         // CUDPPacketDispatcher::OnUDPPacket
         when (opcode) {
             //CWaitForLoginDlg::OnTimer
             0 -> {
-                if (m_uLength == 5) {
-                    val userId = payload.readInt()
-                    // CWaitForLoginDlg::OnAckUDPCommunication
-                    ctx.sendUDP(sender, 2) {}
-                }
+                val userId = buf.readInt()
+                // CWaitForLoginDlg::OnAckUDPCommunication
+                ctx.sendUDP(sender, 2) {}
             }
 
             1 -> {
-                if (m_uLength == 35) {
-                    val userId = payload.readInt()
-                }
+                val userId = buf.readInt()
             }
 
             11 -> {
-                if (m_uLength == 23) {
-                    val userId = payload.readInt()
-                }
+                val userId = buf.readInt()
             }
 
             else -> {}
+        }
+
+        // CRC
+        when {
+            isTW || isCN -> buf.readByte()
+            isJP -> buf.readInt()
         }
     }
 

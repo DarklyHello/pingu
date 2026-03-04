@@ -65,3 +65,7 @@ EatBulaReq: 160
 TakeHouseReq: 161
 ShobuariReq: 162
 NotifyUDPLossReq: 185
+AskFxStock: 213
+AskStringTable: 215
+UserItemListReq: 217
+AskPackageMap: 220
