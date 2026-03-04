@@ -2,7 +2,9 @@ package pingu.server
 
 import pingu.netty.SendPacketBase
 
-const val CheifMask = 2
+const val FLAG_CLOSED = 0x1
+const val FLAG_CHIEF = 0x2
+const val FLAG_READY = 0x4
 class Slot(
     var user: User? = null,
     val meta: ByteArray = ByteArray(3), // [0]:狀態, [1]:角色, [2]:顏色

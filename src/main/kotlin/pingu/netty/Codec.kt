@@ -7,7 +7,11 @@ import io.netty.handler.codec.MessageToByteEncoder
 import pingu.*
 
 // ReceivedPacketBase可以省略CipherDegree狀態 所以可以直接用這個
-inline val m_nCipherDegreeInit get() = if (isTH || isVN || isNA) 3 else 1
+val m_nCipherDegreeInit = when {
+    isTH || isVN || isNA -> 3
+    isCN -> 2
+    else -> 1
+}
 
 val headerLen = when (m_nCipherDegreeInit) {
     3 -> 4
@@ -47,26 +51,23 @@ class Decoder : ByteToMessageDecoder() {
     // CReceivedPacketBase::DecodePacket
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
         while (buf.readableBytes() >= minimumLen) {
-            val readerIdx = buf.readerIndex()
-
-            // 使用get可以省略當進來的長度不夠時需要resetReaderIndex的步驟等
+            buf.markReaderIndex()
 
             // CPacketSocket::CheckCode
             val headerCode = (m_nHeaderType + m_nHeaderCodeModifier) xor (m_nHeaderCodeRcvBase + m_nPacketRcvSeq)
-            if (buf.getByte(readerIdx) != headerCode.toByte()) {
+            if (buf.readByte() != headerCode.toByte()) {
                 println("HeaderCode 錯誤，斷開連接: ${ctx.channel().remoteAddress()}")
                 buf.clear()
                 ctx.close()
                 return
             }
 
-            val payloadLen = buf.getUnsignedShort(readerIdx + payloadLenIdx) xor 0xA569
+            val payloadLen = buf.Decode2
 
-            val totalLen = headerLen + payloadLen + crcLen
-
-            if (buf.readableBytes() < totalLen) return
-
-            buf.skipBytes(headerLen) // 前面已經用get來取值了 跳過header
+            if (buf.readableBytes() < (payloadLen + crcLen)) {
+                buf.resetReaderIndex()
+                return
+            }
 
             // (Zero-Copy Slice, 因為要傳給 Handler 所以要retain )
             val payload = buf.readRetainedSlice(payloadLen)

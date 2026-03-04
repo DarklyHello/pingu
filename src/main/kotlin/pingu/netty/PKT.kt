@@ -120,6 +120,10 @@ class SendPacketBase(
         buf.writeBytes(s.toBA())
     }
 
+    fun EncodeBuffer(count: Int) {
+        buf.writeZero(count)
+    }
+
     private fun Encode1At(n: Number) {
         if (this.m_nCipherDegree in 1..3) {
             BufferManipulator.Encrypt1(buf, n)

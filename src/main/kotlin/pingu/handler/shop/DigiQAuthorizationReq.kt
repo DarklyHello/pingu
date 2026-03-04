@@ -9,5 +9,5 @@ val DigiQAuthorizationReq = PKTHandler { c ->
     val pw = DecodeStr
 
     val res = 12
-    c send DigiQAuthorizationResult(12)
+    c send DigiQAuthorizationResult(res)
 }

@@ -1,6 +1,5 @@
 package pingu.handler.room
 
-import io.netty.handler.codec.smtp.SmtpRequests.data
 import pingu.netty.Decode1
 import pingu.netty.PKTHandler
 import pingu.packet.room.SelectColor

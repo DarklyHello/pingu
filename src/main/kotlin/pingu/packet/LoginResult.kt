@@ -1,13 +1,18 @@
 package pingu.packet
 
+import pingu.isCN
+import pingu.isTW
 import pingu.netty.PKT
 import pingu.server.User
 
 // server = CLoginPool::OnCenterResAddNewUser
 // client = CLoginStage::OnLoginResult | TW_5 = 474F70 | JP_17 = 46EBCA
 fun LoginResult(users: List<User>) = PKT {
-    Encode1() // Res
+    Encode1() // Res | 0 = Success | 1 = LoginNotRegistered | 2 = LoginAlready | 3 = LoginUnknown
 
+    if (isCN) {
+        Encode1() // 網吧
+    }
     Encode2(1)
     EncodeStr()
 
@@ -24,23 +29,38 @@ fun LoginResult(users: List<User>) = PKT {
 
         Encode4(user.lucci)
         Encode4(user.exp)
-        Encode1()
+        if (isTW) {
+            Encode1()
+        }
         EncodeStr() // mail
 
-        Encode1(2)
-        Encode1(2)
+        if (isTW) {
+            Encode1(2)
+            Encode1(2)
+        }
 
         Encode4()
 
-        // 這個v7沒有
-        val size = 0
-        Encode1(size)
-        repeat(size) {
-            EncodeStr()
-            Encode4()
-            Encode1()
+        if (isTW) {
+            // 這個v7沒有
+            val size = 0
+            Encode1(size)
+            repeat(size) {
+                EncodeStr()
+                Encode4()
+                Encode1()
+            }
+        }
+
+        if (isCN) {
+            val size = 0
+            Encode1(size)
+            repeat(size) {
+                EncodeBuffer(8)
+            }
         }
     }
+
     EncodeStr()
 }
 

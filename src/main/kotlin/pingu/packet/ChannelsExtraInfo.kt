@@ -1,6 +1,6 @@
 package pingu.packet
 
-import kotlinx.serialization.encoding.Encoder
+import pingu.isCN
 import pingu.isJP
 import pingu.isTW
 import pingu.netty.PKT
@@ -12,7 +12,7 @@ fun ChannelsExtraInfo() = PKT {
     Encode2(525)
     Encode2(60)
 
-    if (isTW) {
+    if (isTW || isCN) {
         Encode1(1) //size
         Encode4(0x7F000001)
         Encode2(9898)
@@ -26,17 +26,21 @@ fun ChannelsExtraInfo() = PKT {
         Encode4(0x7F000001)
 
         val size = 0
-        Encode1(size)
+        Encode2(size)
         repeat(size) {
             Encode1()
             Encode1()
             EncodeStr()
         }
 
+        Encode2(15)
+
         // JUM Server
-        Encode1(1)
-        Encode4(0x7F000001)
-        Encode2(7360)
+        if (isTW) {
+            Encode1(1)
+            Encode4(0x7F000001)
+            Encode2(7360)
+        }
     } else if (isJP) {
         Encode1(1)
         Encode4(0x7F000001)
@@ -49,6 +53,6 @@ fun ChannelsExtraInfo() = PKT {
             EncodeStr()
         }
 
-        Encode2(1)
+        Encode2(15)
     }
 }

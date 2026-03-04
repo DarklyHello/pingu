@@ -3,11 +3,7 @@ package pingu.handler
 import pingu.netty.Decode1
 import pingu.netty.PKTHandler
 import pingu.packet.CreatePracticeSessionResult
-import pingu.server.CheifMask
-import pingu.server.Room
-import pingu.server.bomber
-import pingu.server.color
-import pingu.server.state
+import pingu.server.*
 
 // 開啟練習模式房間
 // server = CGameSessionTable::CreateSessionPractice
@@ -19,13 +15,13 @@ val CreatePracticeSessionReq = PKTHandler { c ->
         Room.slots[i].apply {
             user = c.users[i]
 
-            this.state = CheifMask
+            state = FLAG_CHIEF
             bomber = 5
             color = 0
         }
     }
 
-    repeat(4/*Room.slots.size*/ - userCount) { i ->
+    repeat(6/*Room.slots.size*/ - userCount) { i ->
         Room.slots[userCount + i].apply {
             bomber = 5
             color = 7

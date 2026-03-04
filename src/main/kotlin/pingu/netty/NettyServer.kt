@@ -110,7 +110,7 @@ fun ChannelGroup.BC(packet: PKT, exclude: Channel? = null) {
 @ChannelHandler.Sharable
 private object HandlerRouterUDP : SimpleChannelInboundHandler<DatagramPacket>() {
     val crcLenUDP = when {
-        isTW -> 1
+        isTW || isCN -> 1
         isJP -> 4
         else -> 0
     }
@@ -118,16 +118,16 @@ private object HandlerRouterUDP : SimpleChannelInboundHandler<DatagramPacket>() 
     override fun channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
         val buf = packet.content()
 
-        val size = buf.readUnsignedByte().toInt() - crcLenUDP
+        val m_uLength = buf.readUnsignedByte().toInt() - crcLenUDP
 
-        if (buf.readableBytes() < size) return
+        if (buf.readableBytes() < m_uLength) return
 
-        val payload = buf.readSlice(size)
+        val payload = buf.readSlice(m_uLength)
         val opcode = payload.readUnsignedByte().toInt()
 
         // CRC
         when {
-            isTW -> buf.readByte()
+            isTW || isCN -> buf.readByte()
             isJP -> buf.readInt()
         }
 
@@ -138,20 +138,27 @@ private object HandlerRouterUDP : SimpleChannelInboundHandler<DatagramPacket>() 
         }
 
         val sender = packet.sender()
+
+        // CUDPPacketDispatcher::OnUDPPacket
         when (opcode) {
-            0 -> { //CWaitForLoginDlg::OnTimer
-                val userId = payload.readInt()
-                // CWaitForLoginDlg::OnAckUDPCommunication
-                ctx.channel().sendUDP(sender, 2) {}
+            //CWaitForLoginDlg::OnTimer
+            0 -> {
+                if (m_uLength == 5) {
+                    val userId = payload.readInt()
+                    // CWaitForLoginDlg::OnAckUDPCommunication
+                    ctx.sendUDP(sender, 2) {}
+                }
             }
 
             1 -> {
-                if (size == 35) {
+                if (m_uLength == 35) {
+                    val userId = payload.readInt()
                 }
             }
 
             11 -> {
-                if (size == 23) {
+                if (m_uLength == 23) {
+                    val userId = payload.readInt()
                 }
             }
 
@@ -159,7 +166,7 @@ private object HandlerRouterUDP : SimpleChannelInboundHandler<DatagramPacket>() 
         }
     }
 
-    private inline fun Channel.sendUDP(
+    private inline fun ChannelHandlerContext.sendUDP(
         target: InetSocketAddress,
         opcode: Int,
         block: ByteBuf.() -> Unit
@@ -180,7 +187,7 @@ private object HandlerRouterUDP : SimpleChannelInboundHandler<DatagramPacket>() 
             buf.setByte(0, packetSize) // 回填長度
 
             when {
-                isTW -> buf.writeByte(CRC8.UpdateCRC(dwCrcKey = 0, buf, Size = buf.readableBytes()))
+                isTW || isCN -> buf.writeByte(CRC8.UpdateCRC(dwCrcKey = 0, buf, Size = buf.readableBytes()))
                 isJP -> buf.writeInt(CRC32.UpdateCRC(dwCrcKey = 0, buf, Size = buf.readableBytes()))
             }
 
